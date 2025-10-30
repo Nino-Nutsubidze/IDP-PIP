@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Floward – IDP/PIP Trainer (Standalone)</title>
+  <style>
+    :root{
+      --primary:#00313C; --secondary:#074E59; --sand:#F1CEB3; --cream:#F0E9E0; --accent:#005D67; --clay:#BC8A7E; --steel:#717C7D;
+    }
+    html,body{margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:linear-gradient(180deg,var(--cream),#fff);} 
+    .container{max-width:1180px;margin:0 auto;padding:24px;} 
+    .topbar{position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--primary);color:#fff}
+    .btn{padding:10px 14px;border-radius:12px;border:1px solid #d0d5dd;background:#fff;color:#111;cursor:pointer}
+    .btn--ghost{background:transparent;border-color:rgba(255,255,255,.3);color:#fff}
+    .btn--primary{background:var(--secondary);color:#fff;border-color:var(--secondary)}
+    .btn--accent{background:var(--accent);color:#fff;border-color:var(--accent)}
+    .card{background:#fff;border:1px solid var(--sand);border-radius:18px;box-shadow:0 8px 20px rgba(0,0,0,.04);padding:18px}
+    .grid{display:grid;gap:18px}
+    .grid-2{grid-template-columns:1fr 1fr}
+    .grid-2-lean{grid-template-columns:1.2fr 1fr}
+    .label{font-size:12px;color:#667085;margin-bottom:6px}
+    .input,.textarea,select{width:100%;border:1px solid #d0d5dd;border-radius:12px;padding:10px 12px;font-size:14px;outline:none}
+    .textarea{min-height:90px}
+    .chips{display:flex;flex-wrap:wrap;gap:8px}
+    .chip{padding:6px 10px;border-radius:999px;border:1px solid var(--sand);cursor:pointer;font-size:13px;user-select:none}
+    .chip.active{background:var(--secondary);color:#fff;border-color:var(--secondary)}
+    .meta{display:inline-block;font-size:11px;padding:3px 8px;border-radius:999px;background:var(--cream);color:var(--primary);margin-left:8px}
+    .meta--outline{background:#fff;border:1px solid var(--sand);color:#var(--secondary)}
+    .progress{height:10px;background:#e5e7eb;border-radius:999px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:var(--accent);width:0}
+    .muted{color:#667085;font-size:12px}
+    .list{margin:8px 0 0 18px;color:#475467;font-size:14px}
+    .right{display:flex;gap:8px;align-items:center}
+    @media(max-width:920px){.grid-2,.grid-2-lean{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="right" style="gap:12px">
+      <div style="background:var(--sand);color:var(--primary);border-radius:12px;width:32px;height:32px;display:flex;align-items:center;justify-content:center">✦</div>
+      <div>
+        <div style="font-weight:600">Practice IDP / PIP – Case Trainer</div>
+        <div style="font-size:12px;opacity:.8">AI‑assisted planner • Floward style</div>
+      </div>
+    </div>
+    <div class="right">
+      <button class="btn btn--ghost" id="homeBtn">Home</button>
+      <span id="topbarActions"></span>
+    </div>
+  </div>
+
+  <div class="container" id="home">
+    <div class="grid grid-2">
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div style="font-weight:600;color:var(--secondary);font-size:18px">Practice IDP / PIP – Scenarios</div>
+            <p class="muted" style="margin-top:6px">Choose a case, decide IDP vs PIP, and build a complete plan with competencies, actions, measures, dates, and SBI.</p>
+          </div>
+          <button class="btn btn--primary" id="openTrainer">Open Trainer</button>
+        </div>
+        <ul class="list">
+          <li>5 realistic Floward‑inspired cases</li>
+          <li>AI Coach suggests plans and critique</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+          <div>
+            <div style="font-weight:600;color:var(--primary);font-size:18px">Personal SWOT → IDP Build‑Up</div>
+            <p class="muted" style="margin-top:6px">Capture your SWOT and auto‑convert to an actionable 90‑day IDP with competencies, actions and measures.</p>
+          </div>
+          <button class="btn btn--accent" id="openSwot">Open Module</button>
+        </div>
+        <ul class="list">
+          <li>AI suggests goal, competencies, actions & measures</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRAINER -->
+  <div class="container" id="trainer" style="display:none">
+    <div class="grid grid-2-lean">
+      <div class="grid" style="gap:18px">
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div class="right">
+              <select class="input" id="caseSelect"></select>
+              <span class="meta" id="caseRating"></span>
+              <span class="meta meta--outline" id="caseType"></span>
+            </div>
+            <button class="btn btn--ghost" id="compareBtn">Compare IDP vs PIP</button>
+          </div>
+          <div class="grid grid-2" style="margin-top:12px">
+            <div>
+              <div class="label">Context</div>
+              <div class="card" style="padding:12px;border:1px solid #e5e7eb" id="caseContext"></div>
+            </div>
+            <div>
+              <div class="label">Manager Feedback</div>
+              <div class="card" style="padding:12px;border:1px solid #e5e7eb" id="caseFeedback"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+            <div>
+              <div style="font-weight:600;color:var(--primary)">Decision: IDP or PIP?</div>
+              <div class="muted">Choose the appropriate path. AI can suggest one based on rating and context.</div>
+            </div>
+            <div class="right">
+              <button class="btn" id="pickIDP">IDP</button>
+              <button class="btn" id="pickPIP">PIP</button>
+              <button class="btn btn--accent" id="aiSuggest">AI Suggest</button>
+            </div>
+          </div>
+          <div class="muted" id="coachCritique" style="margin-top:10px;background:var(--cream);padding:10px;border-radius:12px"></div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:600;color:var(--primary);margin-bottom:8px">Build the Plan</div>
+          <div>
+            <div class="label">Goal</div>
+            <input class="input" id="goal" placeholder="Write a SMART goal for this plan" />
+          </div>
+          <div style="margin-top:12px">
+            <div class="label">Competencies (multi‑select)</div>
+            <div class="chips" id="competencyChips"></div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="label">Actions</div>
+            <textarea class="textarea" id="actions" placeholder="List the actions (one per line)"></textarea>
+          </div>
+          <div style="margin-top:12px">
+            <div class="label">Success Measures</div>
+            <textarea class="textarea" id="measures" placeholder="List how success will be measured (one per line)"></textarea>
+          </div>
+          <div class="grid grid-2" style="margin-top:12px">
+            <div>
+              <div class="label">Start</div>
+              <input type="date" class="input" id="start" />
+            </div>
+            <div>
+              <div class="label">End</div>
+              <input type="date" class="input" id="end" />
+            </div>
+          </div>
+          <div style="margin-top:12px">
+            <div class="label">SBI Conversation Draft</div>
+            <textarea class="textarea" id="sbi" placeholder="Use Situation, Behavior, Impact.&#10;Situation: ...&#10;Behavior: ...&#10;Impact: ..."></textarea>
+          </div>
+          <div class="grid grid-2" style="margin-top:12px">
+            <div>
+              <div class="label">Check‑in Frequency</div>
+              <select class="input" id="checkin">
+                <option value="">Select</option>
+                <option>Weekly</option>
+                <option>Bi‑weekly</option>
+                <option>Monthly</option>
+              </select>
+            </div>
+            <div>
+              <div class="label">Rationale</div>
+              <input class="input" id="rationale" placeholder="Why this cadence?" />
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:12px;border-top:1px solid var(--cream);padding-top:12px">
+            <button class="btn btn--accent" id="autoComplete">AI: Auto‑complete</button>
+            <button class="btn" id="resetCase">Reset Case</button>
+            <div style="margin-left:auto;min-width:240px">
+              <div class="muted" style="margin-bottom:6px">Completion</div>
+              <div class="progress"><i id="progressBar"></i></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card" style="background:var(--cream)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div style="font-weight:600;color:var(--primary)">AI Coach</div>
+            <button class="btn btn--primary" id="coachSuggest">Suggest</button>
+          </div>
+          <p class="muted" style="margin-top:6px">The coach will suggest IDP/PIP, a SMART goal, competencies, actions, success measures, SBI seed, and check‑in cadence. You can edit anything.</p>
+          <div style="font-size:14px;margin-top:8px">
+            <div class="label">Suggested Decision</div>
+            <div class="card" style="padding:8px" id="ai_decision">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">Goal</div>
+            <div class="card" style="padding:8px" id="ai_goal">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">Competencies</div>
+            <div class="card" style="padding:8px" id="ai_comp">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">Actions</div>
+            <div class="card" style="padding:8px;white-space:pre-wrap" id="ai_actions">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">Success Measures</div>
+            <div class="card" style="padding:8px;white-space:pre-wrap" id="ai_measures">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">SBI Seed</div>
+            <div class="card" style="padding:8px;white-space:pre-wrap" id="ai_sbi">(click Suggest)</div>
+            <div class="label" style="margin-top:8px">Check‑in</div>
+            <div class="card" style="padding:8px" id="ai_checkin">(click Suggest)</div>
+          </div>
+          <div class="muted" id="ai_critique" style="margin-top:10px;border:1px solid var(--sand);padding:10px;border-radius:12px"></div>
+        </div>
+
+        <div class="card">
+          <div style="font-weight:600;color:var(--primary);margin-bottom:6px">Quality Checks</div>
+          <ul class="list">
+            <li>Decision matches rating trend and feedback</li>
+            <li>Goal is SMART and aligned to context</li>
+            <li>3–5 targeted competencies selected</li>
+            <li>Actions are time‑bound and observable</li>
+            <li>Measures link clearly to outcomes</li>
+            <li>Dates feasible; check‑ins set with rationale</li>
+            <li>SBI uses neutral language and facts</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SWOT -->
+  <div class="container" id="swot" style="display:none">
+    <div class="grid grid-2">
+      <div class="card">
+        <div style="font-weight:600;color:var(--primary);margin-bottom:6px">Personal SWOT</div>
+        <div class="label">Strengths</div>
+        <textarea class="textarea" id="sw_S" placeholder="What are you naturally good at?"></textarea>
+        <div class="label" style="margin-top:10px">Weaknesses</div>
+        <textarea class="textarea" id="sw_W" placeholder="Which behaviors or skills hold you back?"></textarea>
+        <div class="label" style="margin-top:10px">Opportunities</div>
+        <textarea class="textarea" id="sw_O" placeholder="Upcoming projects, mentors, courses, stretch roles"></textarea>
+        <div class="label" style="margin-top:10px">Threats</div>
+        <textarea class="textarea" id="sw_T" placeholder="Risks, constraints, timelines, dependencies"></textarea>
+        <div class="right" style="margin-top:10px">
+          <button class="btn btn--accent" id="sw_ai">AI Suggest Plan</button>
+          <button class="btn" id="sw_reset">Reset</button>
+        </div>
+      </div>
+      <div class="card">
+        <div style="font-weight:600;color:var(--primary);margin-bottom:6px">IDP Build‑Up</div>
+        <div class="label">Goal</div>
+        <input class="input" id="sw_goal" placeholder="SMART goal from SWOT" />
+        <div class="label" style="margin-top:10px">Target Competencies</div>
+        <div class="chips" id="sw_comp"></div>
+        <div class="label" style="margin-top:10px">Actions</div>
+        <textarea class="textarea" id="sw_actions" placeholder="A1. ...&#10;A2. ..."></textarea>
+        <div class="label" style="margin-top:10px">Success Measures</div>
+        <textarea class="textarea" id="sw_measures" placeholder="M1. ...&#10;M2. ..."></textarea>
+        <div class="muted" style="margin-top:12px; border:1px dashed var(--sand); padding:10px; border-radius:12px">
+          <b>How to craft objectives with SWOT (TOWS):</b><br/>
+          <ul class="list">
+            <li><b>SO</b> – Use a <i>Strength</i> to exploit an <i>Opportunity</i>.<br/>e.g., "Use my strong storytelling to lead the Q3 pricing review and land decisions faster."</li>
+            <li><b>WO</b> – Fix a <i>Weakness</i> using an <i>Opportunity</i>.<br/>e.g., "Close my delegation gap by piloting handoffs on the new onboarding project."</li>
+            <li><b>ST</b> – Use a <i>Strength</i> to counter a <i>Threat</i>.<br/>e.g., "Leverage my data rigor to pre‑empt churn risk with a weekly early‑warning dashboard."</li>
+            <li><b>WT</b> – Reduce a <i>Weakness</i> under a <i>Threat</i>.<br/>e.g., "Introduce checklists and buddy reviews to avoid errors during peak weeks."</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;color:#98a2b3;font-size:12px;padding:28px">Floward • Practice IDP/PIP Trainer</div>
+
+<script>
+(function(){
+  const brand={primary:'#00313C',secondary:'#074E59',sand:'#F1CEB3',cream:'#F0E9E0',accent:'#005D67',clay:'#BC8A7E',steel:'#717C7D'};
+  const ALL_COMP=["Customer Focus","Innovation","Accountability","Collaboration / Team Building","Process Improvement","Resource Management","Technical Credibility","Problem-Solving","Learning Agility","Digital Fluency","Leading Projects","Effective Communication & Interpersonal Skills","Influencing / Negotiating","Emotional Intelligence","Conflict Resolution","Systems Thinking","Strategic Thinking","Decisiveness","Agility","Resilience","Empowerment / Talent Development"];
+  const CASES=[
+    {id:'hassan',title:'Hassan',role:'Product Designer',type:'HiPo with derailers',context:'Highly creative with standout design craft. Tends to over-polish, misses deadlines, and resists timeboxing.',feedback:'Delivers amazing outputs but often late.',rating:2.75,focus:'Identify if PIP or IDP; improve time management & prioritization.'},
+    {id:'noura',title:'Noura',role:'Country Operations Manager',type:'Emerging Leader',context:'Drives execution under pressure. Frequently takes tasks back, weak delegation and coaching; team underdeveloped.',feedback:'Does too much herself; team underdeveloped.',rating:3.2,focus:'IDP on leadership & empowerment; plan coaching focus.'},
+    {id:'faisal',title:'Faisal',role:'Senior Data Analyst',type:'High Performer',context:'Great technical depth, reliable delivery. Struggles to influence senior stakeholders; narrative is too technical.',feedback:'Insights are solid, but communication needs work.',rating:4.0,focus:'Build IDP on storytelling, influencing & communication.'},
+    {id:'laila',title:'Laila',role:'Brand Manager',type:'Mid-Performer',context:'Innovative campaigns with strong creative instincts. Misalignment with Product & Ops; friction in handoffs.',feedback:'Brilliant ideas, but collaboration challenges.',rating:3.1,focus:'IDP on teamwork, conflict resolution, and stakeholder alignment.'},
+    {id:'ahmad',title:'Ahmad',role:'Operations Supervisor',type:'Low Performer',context:'Inconsistent task follow‑through. Ownership gaps on shift checklists and driver routing.',feedback:'Needs structure and follow-through on tasks.',rating:2.4,focus:'Build PIP or structured IDP with SMART actions & feedback rhythm.'}
+  ];
+
+  const el=(id)=>document.getElementById(id);
+  const state={plans:{}, selected:CASES[0].id};
+
+  // Navigation
+  el('homeBtn').onclick=()=>show('home');
+  el('openTrainer').onclick=()=>{show('trainer');refreshTopbar('trainer');};
+  el('openSwot').onclick=()=>{show('swot');refreshTopbar('swot');};
+
+  function show(section){ ['home','trainer','swot'].forEach(s=>{el(s).style.display=(s===section?'block':'none');}); refreshTopbar(section); }
+
+  function refreshTopbar(section){
+    const wrap=el('topbarActions'); wrap.innerHTML='';
+    if(section==='trainer'){
+      wrap.append(btn('Reset',()=>resetCase()));
+    } else if(section==='swot'){
+      wrap.append(btn('Reset',()=>resetSwot()));
+    }
+  }
+
+  function btn(txt,fn){ const b=document.createElement('button'); b.className='btn btn--ghost'; b.textContent=txt; b.onclick=fn; return b; }
+
+  // Populate cases
+  const sel=el('caseSelect');
+  CASES.forEach(c=>{ const o=document.createElement('option'); o.value=c.id; o.textContent=`${c.title} – ${c.role}`; sel.append(o); });
+  sel.value=state.selected;
+  sel.onchange=()=>{ state.selected=sel.value; loadCase(); };
+
+  // Competencies chips (trainer & swot)
+  function renderChips(target, arr, toggle){
+    target.innerHTML='';
+    ALL_COMP.forEach(c=>{
+      const s=document.createElement('span'); s.className='chip'+(arr.includes(c)?' active':''); s.textContent=c; s.onclick=()=>{ toggle(c); }; target.append(s);
+    });
+  }
+
+  function todayPlus(d){ const x=new Date(); x.setDate(x.getDate()+d); return x.toISOString().slice(0,10); }
+
+  function currentCase(){ return CASES.find(c=>c.id===state.selected); }
+  function currentPlan(){ return state.plans[state.selected]||{}; }
+  function updatePlan(patch){ state.plans[state.selected]=Object.assign({},currentPlan(),patch); refreshAI(); refreshProgress(); }
+  function resetCase(){ state.plans[state.selected]={}; loadCase(); }
+
+  // Load case UI
+  function loadCase(){
+    const c=currentCase();
+    el('caseRating').textContent='Rating: '+c.rating;
+    el('caseType').textContent=c.type;
+    el('caseContext').textContent=c.context;
+    el('caseFeedback').textContent=c.feedback;
+
+    const p=currentPlan();
+    el('goal').value=p.goal||'';
+    el('actions').value=p.actions||'';
+    el('measures').value=p.measures||'';
+    el('start').value=p.start||todayPlus(0);
+    el('end').value=p.end||todayPlus(60);
+    el('sbi').value=p.sbi||'';
+    el('checkin').value=p.checkin||'';
+    el('rationale').value=p.rationale||'';
+
+    // chips
+    const target=el('competencyChips');
+    const toggle=(comp)=>{
+      const set=new Set((state.plans[state.selected]?.competencies)||[]);
+      if(set.has(comp)) set.delete(comp); else set.add(comp);
+      updatePlan({competencies:[...set]});
+      renderChips(target, [...set], toggle);
+    };
+    renderChips(target, p.competencies||[], toggle);
+
+    refreshAI(); refreshProgress();
+  }
+
+  // Buttons
+  el('pickIDP').onclick=()=>updatePlan({decision:'IDP'});
+  el('pickPIP').onclick=()=>updatePlan({decision:'PIP'});
+  el('aiSuggest').onclick=()=>applyAICoach();
+  el('autoComplete').onclick=()=>applyAICoach(true);
+  el('coachSuggest').onclick=()=>applyAICoach();
+  el('resetCase').onclick=()=>resetCase();
+
+  // Inputs
+  ['goal','actions','measures','start','end','sbi','checkin','rationale'].forEach(id=>{
+    el(id).addEventListener('input',()=>{
+      const patch={}; patch[id]=el(id).value; updatePlan(patch);
+    });
+  });
+
+  // AI COACH
+  function aiCoach(c, p){
+    const r=c.rating; const fb=(c.feedback+' '+c.context).toLowerCase();
+    let decision=p.decision||''; if(!decision){ if(r<2.6) decision='PIP'; else if(r>=2.6 && r<2.9 && fb.includes('late')) decision='PIP'; else decision='IDP'; }
+    const comp=new Set(p.competencies||[]);
+    const add=(x)=>comp.add(x);
+    if(c.id==='hassan'){ add('Process Improvement'); add('Decisiveness'); add('Accountability'); add('Agility'); }
+    if(c.id==='noura'){ add('Empowerment / Talent Development'); add('Leading Projects'); add('Collaboration / Team Building'); }
+    if(c.id==='faisal'){ add('Influencing / Negotiating'); add('Effective Communication & Interpersonal Skills'); add('Strategic Thinking'); }
+    if(c.id==='laila'){ add('Conflict Resolution'); add('Collaboration / Team Building'); add('Systems Thinking'); }
+    if(c.id==='ahmad'){ add('Accountability'); add('Process Improvement'); add('Resource Management'); add('Resilience'); }
+
+    let goal=p.goal||'';
+    if(!goal){ if(c.id==='hassan') goal='Consistently deliver high‑quality designs on‑time by adopting timeboxing and prioritization routines.';
+      if(c.id==='noura') goal='Scale leadership impact by delegating effectively and developing 2 team leads to run day‑to‑day operations.';
+      if(c.id==='faisal') goal='Elevate stakeholder influence by translating insights into clear, decision‑ready narratives.';
+      if(c.id==='laila') goal='Strengthen cross‑functional alignment to deliver campaigns with smooth handoffs and shared milestones.';
+      if(c.id==='ahmad') goal='Achieve reliable shift execution through structured routines, ownership, and on‑time completion of checklists.'; }
+
+    let actions=p.actions||''; let measures=p.measures||''; const S=[], M=[];
+    switch(c.id){
+      case 'hassan':
+        S.push('Implement 90‑min design sprints with 15‑min buffer; agree DoD per task.','Use 2‑level review (peer then manager) to avoid late over‑polishing.','Adopt weekly prioritization using MoSCoW; block calendar focus slots.');
+        M.push('95% tasks delivered by agreed deadline for 8 consecutive weeks','Avg review iteration count ≤ 2','Calendar shows 2×2h focus blocks weekly');
+        break;
+      case 'noura':
+        S.push('Create RACI for top 5 workflows and delegate execution to two team leads.','Run weekly 1:1s focused on coaching, not task taking.','Shadow‑to‑solo plan for two delegates over 8 weeks.');
+        M.push('Delegation score (self+team pulse) ≥ 4/5','Two team leads independently run shifts by week 8','Manager time in hands‑on tasks reduced 40%');
+        break;
+      case 'faisal':
+        S.push('Enroll in 2‑week storytelling clinic; practice 3 stakeholder demos.','Adopt "So‑What" framework and executive summary template.','Pair with Product to pre‑brief findings before exec reviews.');
+        M.push('Stakeholder clarity score ≥ 4.3/5','Decks open with 3‑line narrative in 100% of reviews','3 wins where analysis directly informs a decision');
+        break;
+      case 'laila':
+        S.push('Establish shared roadmap with Product/Ops; fortnightly sync.','Agree on campaign RACI and SLAs for handoffs.','Complete conflict resolution micro‑course; practice SBI in 2 live moments.');
+        M.push('Cross‑functional satisfaction ≥ 4/5','Zero missed handoffs for next 2 campaigns','2 documented SBI conversations with outcomes');
+        break;
+      case 'ahmad':
+        S.push('Daily start‑of‑shift checklist with supervisor sign‑off.','Set 3 priority tasks per day with EOD review.','Weekly skill coaching on routing tool; log practice runs.');
+        M.push('95% checklist completion for 6 weeks','Task completion rate ≥ 90%','Routing errors reduced by 60%');
+        break;
+    }
+    if(!actions) actions=S.map((x,i)=>`A${i+1}. ${x}`).join('\n');
+    if(!measures) measures=M.map((x,i)=>`M${i+1}. ${x}`).join('\n');
+
+    let checkin=p.checkin||''; let rationale=p.rationale||'';
+    if(!checkin) checkin = (decision==='PIP')? 'Weekly' : (c.rating>=3.7? 'Monthly':'Bi‑weekly');
+    if(!rationale) rationale = (decision==='PIP')? 'Weekly cadence ensures close support, early risk detection, and timely course‑corrections.' : (c.rating>=3.7? 'Monthly allows autonomy while maintaining momentum on narrative and influence goals.' : 'Bi‑weekly provides rhythm and accountability without micro‑management during skill building.');
+
+    let sbi=p.sbi||'';
+    if(!sbi){
+      const situation=`Situation: ${c.context}`; const behavior=`Behavior: ${c.feedback}`; let impact='';
+      if(c.id==='hassan') impact='Impact: Deadlines slip, which delays dependent workstreams.';
+      else if(c.id==='noura') impact='Impact: Team capability growth stalls and bottlenecks form around you.';
+      else if(c.id==='faisal') impact='Impact: Decisions get delayed as stakeholders struggle to connect insights to actions.';
+      else if(c.id==='laila') impact='Impact: Misalignment creates rework and friction across teams.';
+      else impact='Impact: Inconsistent execution affects shift outcomes and customer promises.';
+      sbi=[situation,behavior,impact].join('\n');
+    }
+
+    return {decision,goal,competencies:[...comp],actions,measures,checkin,rationale,sbi,critique:critique(decision,c.rating)};
+  }
+
+  function critique(decision,r){
+    if(decision==='PIP' && r>=3.0) return 'Consider IDP instead: rating suggests core performance is acceptable; target the specific gaps with development goals.';
+    if(decision==='IDP' && r<2.6) return 'Risk: Rating indicates persistent underperformance. A time‑bound PIP with clear expectations may be more appropriate.';
+    return 'Looks reasonable given the current rating and context.';
+  }
+
+  function applyAICoach(autocomplete){ const c=currentCase(); const p=currentPlan(); const gen=aiCoach(c,p); updatePlan(gen); if(autocomplete){} }
+
+  function refreshAI(){
+    const p=currentPlan(); const c=currentCase();
+    el('coachCritique').textContent = p.decision? ('Coach critique: '+critique(p.decision,c.rating)) : '';
+    el('ai_decision').textContent = p.decision||'(click Suggest)';
+    el('ai_goal').textContent = p.goal||'(click Suggest)';
+    el('ai_comp').textContent = (p.competencies||[]).join(', ')||'(click Suggest)';
+    el('ai_actions').textContent = p.actions||'(click Suggest)';
+    el('ai_measures').textContent = p.measures||'(click Suggest)';
+    el('ai_sbi').textContent = p.sbi||'(click Suggest)';
+    el('ai_checkin').textContent = (p.checkin||'') + (p.rationale? (' – '+p.rationale):'');
+  }
+
+  function refreshProgress(){
+    const p=currentPlan(); const fields=[p.decision,p.goal,(p.competencies||[]).length>0,p.actions,p.measures,p.start,p.end,p.sbi,p.checkin,p.rationale];
+    const done=fields.filter(Boolean).length; const pct=Math.round(done/10*100); el('progressBar').style.width=pct+'%';
+  }
+
+  // SWOT MODULE
+  const swot={S:'',W:'',O:'',T:'',goal:'',competencies:[],actions:'',measures:''};
+  function renderSwotChips(){
+    const target=el('sw_comp');
+    renderChips(target, swot.competencies||[], (comp)=>{ const set=new Set(swot.competencies||[]); if(set.has(comp)) set.delete(comp); else set.add(comp); swot.competencies=[...set]; renderSwotChips(); });
+  }
+  ['sw_S','sw_W','sw_O','sw_T','sw_goal','sw_actions','sw_measures'].forEach(id=>{ el(id).addEventListener('input',()=>{ const key=id.replace('sw_',''); swot[key]=el(id).value; }); });
+  el('sw_ai').onclick=()=>{
+    // Build IDP suggestions from SWOT using SO/WO/ST/WT logic
+    const S=(swot.S||'').trim();
+    const W=(swot.W||'').trim();
+    const O=(swot.O||'').trim();
+    const T=(swot.T||'').trim();
+
+    // Helper to pick first meaningful phrase
+    const first = (txt)=>{
+      const parts = txt.split(/\n|;|\.|,/).map(x=>x.trim()).filter(Boolean);
+      return parts[0]||'';
+    };
+
+    const s1=first(S), w1=first(W), o1=first(O), t1=first(T);
+
+    // Draft objectives using classic TOWS pairings
+    const objSO = s1 && o1 ? `Leverage strength — ${s1} — to seize opportunity — ${o1} — and deliver a tangible win in 90 days.` : '';
+    const objWO = w1 && o1 ? `Close weakness — ${w1} — by using opportunity — ${o1} — through targeted practice and support.` : '';
+    const objST = s1 && t1 ? `Use strength — ${s1} — to neutralize risk — ${t1} — with proactive routines.` : '';
+    const objWT = w1 && t1 ? `Reduce risk from weakness — ${w1} — under threat — ${t1} — via safeguards and tight feedback loops.` : '';
+
+    // Choose a primary goal (prefer SO→WO→ST→WT)
+    const chosen = objSO || objWO || objST || objWT || 'Translate SWOT insights into a 90‑day development plan with 3 measurable outcomes.';
+    swot.goal = swot.goal && swot.goal.trim() ? swot.goal : chosen;
+
+    // Heuristic actions based on detected themes
+    const themes = (S+' '+W+' '+O+' '+T).toLowerCase();
+    const acts = [];
+    // Time management / delivery
+    if(/late|deadline|timebox|prioriti|delay/.test(themes)){
+      acts.push('A1. Adopt weekly timeboxing (2×2h focus blocks) and agree Definition of Done per task.');
+      acts.push('A2. Use a daily 3‑priorities list with end‑of‑day review and carry‑over rule.');
+    }
+    // Communication & influence
+    if(/story|communicat|influenc|stakeholder|present/.test(themes)){
+      acts.push('A3. Practice the "So‑What" narrative: 3‑line exec summary for every update; rehearse with a buddy.');
+      acts.push('A4. Run 3 stakeholder dry‑runs before key reviews and capture questions in a log.');
+    }
+    // Delegation & coaching
+    if(/delegat|empower|coach|team lead/.test(themes)){
+      acts.push('A5. Create a RACI for top workflows and delegate two areas end‑to‑end to named owners.');
+      acts.push('A6. Switch 1:1s to coaching format (Goal–Reality–Options–Will) with actions logged.');
+    }
+    // Collaboration / conflict
+    if(/conflict|align|handoff|friction|cross/.test(themes)){
+      acts.push('A7. Set a bi‑weekly cross‑functional sync with shared milestones and handoff SLAs.');
+      acts.push('A8. Use SBI to address one live friction point; document next steps and owners.');
+    }
+    // Operations consistency
+    if(/checklist|ownership|routing|ops|supervisor|shift/.test(themes)){
+      acts.push('A9. Implement a start‑/end‑of‑shift checklist with supervisor sign‑off and exception log.');
+      acts.push('A10. Schedule weekly skill coaching on the critical tool; log practice runs and pass criteria.');
+    }
+
+    if(acts.length===0){
+      acts.push('A1. Define 3 monthly milestones tied to selected competencies.');
+      acts.push('A2. Pair with a peer coach for bi‑weekly practice and feedback.');
+      acts.push('A3. Apply the skill in 2 live projects and capture outcomes.');
+    }
+
+    // Measures aligned to actions
+    const meas = [];
+    if(acts.some(a=>/timebox|priorities|deadline/i.test(a))){
+      meas.push('M1. ≥95% tasks delivered by agreed deadlines for 8 consecutive weeks.');
+    }
+    if(acts.some(a=>/So‑What|exec summary|stakeholder|dry‑runs/i.test(a))){
+      meas.push('M2. Stakeholder clarity score ≥4.3/5 in 3 reviews; all decks include a 3‑line narrative.');
+    }
+    if(acts.some(a=>/RACI|delegate|coaching format/i.test(a))){
+      meas.push('M3. Two owners run workflows independently by week 8; manager hands‑on time reduced by 30%.');
+    }
+    if(acts.some(a=>/cross‑functional|SBI|handoff|SLAs/i.test(a))){
+      meas.push('M4. Cross‑functional satisfaction ≥4/5; zero missed handoffs across next 2 initiatives.');
+    }
+    if(acts.some(a=>/checklist|skill coaching|routing|shift/i.test(a))){
+      meas.push('M5. 95% checklist completion for 6 weeks; critical errors reduced by 60%.');
+    }
+    if(meas.length===0){
+      meas.push('M1. ≥4/5 feedback on targeted behaviors.');
+      meas.push('M2. All three monthly milestones completed on time.');
+      meas.push('M3. Two documented wins attributable to the new skill.');
+    }
+
+    // Default competencies from text (non-destructive add)
+    const set=new Set(swot.competencies||[]);
+    if(/delegate|empower|coach/.test(themes)) set.add('Empowerment / Talent Development');
+    if(/conflict|alignment|stakeholder|collaborat/.test(themes)) set.add('Collaboration / Team Building');
+    if(/late|deadline|process|timebox/.test(themes)) set.add('Process Improvement');
+    if(/story|communicat|influenc/.test(themes)) set.add('Effective Communication & Interpersonal Skills');
+    if(/data|analysis|systems/.test(themes)) set.add('Systems Thinking');
+    if(/pressure|resilien/.test(themes)) set.add('Resilience');
+
+    // Write back suggestions only where empty so we don't overwrite user edits
+    if(!swot.actions) swot.actions = acts.join('\n');
+    if(!swot.measures) swot.measures = meas.join('\n');
+    swot.competencies=[...set];
+
+    // Reflect into UI
+    el('sw_goal').value = swot.goal;
+    el('sw_actions').value = swot.actions;
+    el('sw_measures').value = swot.measures;
+    renderSwotChips();
+  };
+  function resetSwot(){ swot.S=swot.W=swot.O=swot.T=swot.goal=swot.actions=swot.measures=''; swot.competencies=[]; ['sw_S','sw_W','sw_O','sw_T','sw_goal','sw_actions','sw_measures'].forEach(id=>el(id).value=''); renderSwotChips(); }
+  el('sw_reset').onclick=()=>resetSwot();
+
+  // Compare modal (simple alert for standalone)
+  el('compareBtn').onclick=()=>{
+    alert(`IDP – Growth & Upskilling\n• Used when core performance meets baseline expectations\n• Focus on skills, scope expansion, leadership growth\n• Cadence: monthly or bi‑weekly\n\nPIP – Remediation & Expectations\n• Used when performance is below expectations (sustained)\n• Clear, time‑bound expectations and consequences\n• Cadence: weekly with documented check‑ins`);
+  };
+
+  // ---------- Minimal Self-tests (won't block UI) ----------
+  try {
+    // Test 1: chip toggling mutates plan state
+    state.selected = CASES[0].id; loadCase();
+    const firstChip = document.querySelector('#competencyChips .chip');
+    if(firstChip){
+      const label = firstChip.textContent;
+      firstChip.click();
+      console.assert((state.plans[state.selected]?.competencies||[]).includes(label), 'Chip toggle should add competency');
+      firstChip.click();
+      console.assert(!(state.plans[state.selected]?.competencies||[]).includes(label), 'Chip toggle should remove competency');
+    }
+    // Test 2: AI coach populates fields
+    applyAICoach(true);
+    const plan = state.plans[state.selected]||{};
+    console.assert(plan.decision && plan.goal && plan.actions && plan.measures, 'AI coach should populate core fields');
+    // Test 3: SWOT AI fills goal/actions/measures from empty
+    ['sw_S','sw_W','sw_O','sw_T'].forEach(id=>{ el(id).value=`Strong communication\nWeak delegation\nNew automation project\nPeak season pressure`; });
+    el('sw_S').dispatchEvent(new Event('input')); el('sw_W').dispatchEvent(new Event('input'));
+    el('sw_O').dispatchEvent(new Event('input')); el('sw_T').dispatchEvent(new Event('input'));
+    el('sw_goal').value=''; el('sw_actions').value=''; el('sw_measures').value='';
+    el('sw_ai').click();
+    console.assert(el('sw_goal').value.length>0, 'SWOT AI should propose a goal');
+    console.assert(el('sw_actions').value.split('\n').length>=3, 'SWOT AI should propose ≥3 actions');
+    console.assert(el('sw_measures').value.split('\n').length>=3, 'SWOT AI should propose ≥3 measures');
+    // Test 4: SWOT AI should not overwrite existing manual goal
+    el('sw_goal').value = 'Manual goal stays'; el('sw_actions').value=''; el('sw_measures').value='';
+    el('sw_goal').dispatchEvent(new Event('input'));
+    el('sw_ai').click();
+    console.assert(el('sw_goal').value === 'Manual goal stays', 'SWOT AI must not overwrite manual goal');
+  } catch(e){ console.warn('Self-tests warning:', e); }
+
+  // Init
+  renderSwotChips();
+  loadCase();
+  show('home');
+})();
+</script>
+</body>
+</html>
